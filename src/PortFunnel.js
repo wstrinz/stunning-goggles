@@ -33,6 +33,7 @@
 
 (function (scope) {
   var PortFunnel = {};
+  scope = scope || window;
   scope.PortFunnel = PortFunnel;
 
   PortFunnel.subscribe = subscribe; // called by HTML file
@@ -41,7 +42,7 @@
 
   function subscribe(app, args) {
     if (!args) args = {};
-    portNames = args.portNames;
+    var portNames = args.portNames;
     if (!portNames) {
       portNames = ["cmdPort", "subPort"];
     }

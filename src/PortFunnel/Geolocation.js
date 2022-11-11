@@ -10,8 +10,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-(function(scope) {
-  var moduleName = 'Geolocation';
+(function (scope) {
+  var moduleName = "Geolocation";
+  scope = scope || window;
   var sub;
 
   function init() {
@@ -21,33 +22,26 @@
       setTimeout(init, 10);
       return;
     }
-    
+
     sub = PortFunnel.sub;
     PortFunnel.modules[moduleName] = { cmd: dispatcher };
 
     // Let the Elm code know we've started
-    sub.send({ module: moduleName,
-               tag: "startup",
-               args : null
-             });
+    sub.send({ module: moduleName, tag: "startup", args: null });
   }
   init();
 
   function sendObject(tag, args) {
-    sub.send({ module: moduleName,
-               tag: tag,
-               args: args
-             });
+    sub.send({ module: moduleName, tag: tag, args: args });
   }
-
 
   // Elm command dispatching
 
-  var tagTable =
-      { getlocation: getLocation,
-        sendchanges: sendChanges,
-        stopchanges: stopChanges
-      }
+  var tagTable = {
+    getlocation: getLocation,
+    sendchanges: sendChanges,
+    stopchanges: stopChanges,
+  };
 
   function dispatcher(tag, args) {
     let f = tagTable[tag];
@@ -63,7 +57,10 @@
     }
     var options = args;
     navigator.geolocation.getCurrentPosition(
-      sendPosition, onError, rawOptions(options));
+      sendPosition,
+      onError,
+      rawOptions(options)
+    );
   }
 
   var watching = false;
@@ -83,7 +80,6 @@
     }
   }
 
-
   // Send a position through the subscription port
 
   function sendPosition(rawPosition) {
@@ -91,69 +87,64 @@
     sendObject("location", location);
   }
 
-
   // OPTIONS
 
-  var defaultOptions =
-      { enableHighAccuracy: false,
-        timeout: undefined,
-        maximumAge: 0
-      }
+  var defaultOptions = {
+    enableHighAccuracy: false,
+    timeout: undefined,
+    maximumAge: 0,
+  };
 
   function rawOptions(options) {
     if (!options) {
       // For debugging. The Elm code always passes options.
       return defaultOptions;
     } else {
-	  return { enableHighAccuracy: options.enableHighAccuracy,
-	           timeout: options.timeout || undefined,
-	           maximumAge: options.maximumAge || 0
-	         };
+      return {
+        enableHighAccuracy: options.enableHighAccuracy,
+        timeout: options.timeout || undefined,
+        maximumAge: options.maximumAge || 0,
+      };
     }
   }
-
 
   // LOCATIONS
 
   function encodeLocation(rawPosition) {
-	var coords = rawPosition.coords;
+    var coords = rawPosition.coords;
 
-	var rawAltitude = coords.altitude;
-	var rawAccuracy = coords.altitudeAccuracy;
-	var altitude =
-		(rawAltitude === null || rawAccuracy === null)
-		? null
-		: { value: rawAltitude,
-            accuracy: rawAccuracy
-          };
-	var heading = coords.heading;
-	var speed = coords.speed;
-	var movement =
-		(heading === null || speed === null)
-		? null
-		: (speed === 0
-		   ? 'static'
-	       : { speed: speed, degreesFromNorth: heading }
-          );
-  	return { latitude: coords.latitude,
-		     longitude: coords.longitude,
-		     accuracy: coords.accuracy,
-		     altitude: altitude,
-		     movement: movement,
-		     timestamp: rawPosition.timestamp
-	       };
+    var rawAltitude = coords.altitude;
+    var rawAccuracy = coords.altitudeAccuracy;
+    var altitude =
+      rawAltitude === null || rawAccuracy === null
+        ? null
+        : { value: rawAltitude, accuracy: rawAccuracy };
+    var heading = coords.heading;
+    var speed = coords.speed;
+    var movement =
+      heading === null || speed === null
+        ? null
+        : speed === 0
+        ? "static"
+        : { speed: speed, degreesFromNorth: heading };
+    return {
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      accuracy: coords.accuracy,
+      altitude: altitude,
+      movement: movement,
+      timestamp: rawPosition.timestamp,
+    };
   }
-
 
   // ERRORS
 
-  var errorTypes = ['PermissionDenied', 'PositionUnavailable', 'Timeout'];
+  var errorTypes = ["PermissionDenied", "PositionUnavailable", "Timeout"];
 
   function encodeError(rawError) {
     var key = errorTypes[rawError.code - 1];
     var res = {};
-    res[key] = rawError.message
+    res[key] = rawError.message;
     return res;
   }
-
 })(this);

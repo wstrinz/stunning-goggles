@@ -1,10 +1,11 @@
 import "./style.css";
-
 import { Elm } from "./Main.elm";
+import "./PortFunnel.js";
+import "./PortFunnel/Geolocation.js";
 
 var app = Elm.Main.init({
   node: document.getElementById("app"),
   flags: "Initial Message",
 });
 
-(window as any).PortFunnel.subscribe(app, { modules: ["Geolocation"] });
+PortFunnel.subscribe(app, { modules: ["Geolocation"] });
